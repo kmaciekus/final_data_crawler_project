@@ -26,7 +26,8 @@ class PlotEstateCrawler:
         Scrapes real estate data from the specified search region.
 
         Returns:
-        - list: List of RealEstateObject instances representing the scraped data.
+        - dict: {"Plots": objects, "Search_phrase":"Your searchPhrase"};
+            objects - List of RealEstateObject instances representing the scraped data.
         """
         url = self.BASE_URL + self.SKLYPAI_URL + self.SEARCH_URL + self.mod_search_text
         self.driver.get(url)
@@ -61,7 +62,7 @@ class PlotEstateCrawler:
             else:
                 next_page_button.click()
 
-        return objects
+        return {"Plots": objects, "Search_phrase":f"{self.search_text}"}
 
     def close_driver(self):
         """Closes the WebDriver."""
