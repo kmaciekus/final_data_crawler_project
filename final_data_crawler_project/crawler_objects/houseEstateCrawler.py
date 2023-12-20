@@ -3,13 +3,13 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
 
-class PlotEstateCrawler:
+class HouseEstateCrawler:
     BASE_URL = "https://www.aruodas.lt/"
-    PLOT_URL = "sklypai/"
+    HOUSE_URL = "namai/"
     SEARCH_URL = "?search_text="
     def __init__(self, search_text: str) -> None:
         """
-        Initializes the PlotEstateCrawler object.
+        Initializes the HouseEstateCrawler object.
 
         Parameters:
         - search_text (str): The region to search for.
@@ -27,10 +27,10 @@ class PlotEstateCrawler:
         Scrapes real estate data from the specified search region.
 
         Returns:
-        - dict: {"Plots": objects, "Search_phrase":"Your searchPhrase"};
+        - dict: {"Houses": objects, "Search_phrase":"Your searchPhrase"};
             objects - List of RealEstateObject instances representing the scraped data.
         """
-        url = self.BASE_URL + self.PLOT_URL + self.SEARCH_URL + self.mod_search_text
+        url = self.BASE_URL + self.HOUSE_URL + self.SEARCH_URL + self.mod_search_text
         self.driver.get(url)
         cookie_element = self.driver.find_element(by="id", value="onetrust-reject-all-handler")
         cookie_element.click()
@@ -46,10 +46,11 @@ class PlotEstateCrawler:
                 object_url = object_link.get_attribute("href")
                 object_price = address_loc.find_element(By.CSS_SELECTOR, "div span.list-item-price-v2").text
                 object_area = element.find_element(By.CLASS_NAME, "list-AreaOverall-v2 ").text
-                object_purpose = element.find_element(By.CLASS_NAME, "list-Intendances-v2 ").text
+                object_plot_area=element.find_element(By.CLASS_NAME, "list-AreaLot-v2 ")
+                object_state=element.find_element(By.CLASS_NAME, "list-HouseStates-v2 ")
 
-                obj = PlotEstateObject(object_address, object_url, object_price, object_area, object_purpose)
-                objects.append(obj)
+                obj = HouseEstateObject(object_address, object_url, object_price, object_area, object_plot_area, object_state)
+                objects.append(obj.__dict__)
 
             try:
                 next_page_button = self.driver.find_element(By.XPATH, "//div[contains(@class, 'pagination')]/a[text()='»']")
@@ -63,27 +64,29 @@ class PlotEstateCrawler:
             else:
                 next_page_button.click()
 
-        return {"Plots": objects, "Search_phrase":f"{self.search_text}"}
+        return {"Houses": objects, "Search_phrase":f"{self.search_text}"}
 
     def close_driver(self):
         """Closes the WebDriver."""
         self.driver.close()
 
-class PlotEstateObject:
+class HouseEstateObject:
     """
         Initializes the PlotEstateObject.
 
         Parameters:
         - address (str): The address of the real estate.
         - url (str): The URL of the real estate listing.
-        - price (float): The price of the real estate.
+        - price (str): The price of the real estate.
         - area (str): The area of the real estate.
-        - purpose (str): The purpose of the real estate (e.g., residential, commercial).
+        - plot area (str): Area of the plot.
+        - state (str): The current state of the real estate (ex.: finished, partly finised).
         """
-    def __init__(self, address, url, price, area, purpose):
+    def __init__(self, address, url, price, area, plot_area, state):
         self.address = address.replace("\n", " ")
         self.url = url
         self.price = float(price.replace("€", "").replace(" ", ""))
         self.area = area
-        self.purpose = purpose
+        self.plot_area = plot_area
+        self.state = state
         self.created = str(datetime.now())
