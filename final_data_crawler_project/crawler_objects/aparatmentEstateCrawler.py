@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
+import time
 
 class ApartmentEstateCrawler:
     BASE_URL = "https://www.aruodas.lt/"
@@ -36,7 +37,9 @@ class ApartmentEstateCrawler:
         cookie_element.click()
 
         objects = []
-        while True:
+        start_time = time.time()
+
+        while time.time() - start_time < 60:
             advert_wrapper = self.driver.find_elements(By.CSS_SELECTOR, ".list-row-v2.object-row")
             
             for element in advert_wrapper:
@@ -46,8 +49,8 @@ class ApartmentEstateCrawler:
                 object_url = object_link.get_attribute("href")
                 object_price = address_loc.find_element(By.CSS_SELECTOR, "div span.list-item-price-v2").text
                 object_area = element.find_element(By.CLASS_NAME, "list-AreaOverall-v2 ").text
-                object_no_of_rooms=element.find_element(By.CLASS_NAME, "list-RoomNum-v2 ")
-                object_floor_no=element.find_element(By.CLASS_NAME, "list-Floors-v2 ")
+                object_no_of_rooms=element.find_element(By.CLASS_NAME, "list-RoomNum-v2 ").text
+                object_floor_no=element.find_element(By.CLASS_NAME, "list-Floors-v2 ").text
 
                 obj = ApratmentEstateObject(object_address, object_url, object_price, object_area, object_no_of_rooms, object_floor_no)
                 objects.append(obj.__dict__)
@@ -63,6 +66,7 @@ class ApartmentEstateCrawler:
                 break
             else:
                 next_page_button.click()
+                time.sleep(2)
 
         return {"Apartments": objects, "Search_phrase":f"{self.search_text}"}
 

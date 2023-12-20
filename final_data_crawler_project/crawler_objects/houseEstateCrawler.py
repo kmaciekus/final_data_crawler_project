@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
+import time
 
 class HouseEstateCrawler:
     BASE_URL = "https://www.aruodas.lt/"
@@ -36,7 +37,9 @@ class HouseEstateCrawler:
         cookie_element.click()
 
         objects = []
-        while True:
+        start_time = time.time()
+
+        while time.time() - start_time < 60:
             advert_wrapper = self.driver.find_elements(By.CSS_SELECTOR, ".list-row-v2.object-row")
             
             for element in advert_wrapper:
@@ -46,8 +49,8 @@ class HouseEstateCrawler:
                 object_url = object_link.get_attribute("href")
                 object_price = address_loc.find_element(By.CSS_SELECTOR, "div span.list-item-price-v2").text
                 object_area = element.find_element(By.CLASS_NAME, "list-AreaOverall-v2 ").text
-                object_plot_area=element.find_element(By.CLASS_NAME, "list-AreaLot-v2 ")
-                object_state=element.find_element(By.CLASS_NAME, "list-HouseStates-v2 ")
+                object_plot_area=element.find_element(By.CLASS_NAME, "list-AreaLot-v2 ").text
+                object_state=element.find_element(By.CLASS_NAME, "list-HouseStates-v2 ").text
 
                 obj = HouseEstateObject(object_address, object_url, object_price, object_area, object_plot_area, object_state)
                 objects.append(obj.__dict__)
@@ -63,6 +66,7 @@ class HouseEstateCrawler:
                 break
             else:
                 next_page_button.click()
+                time.sleep(2)
 
         return {"Houses": objects, "Search_phrase":f"{self.search_text}"}
 

@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime
+import time
 
 class PlotEstateCrawler:
     BASE_URL = "https://www.aruodas.lt/"
@@ -36,7 +37,9 @@ class PlotEstateCrawler:
         cookie_element.click()
 
         objects = []
-        while True:
+        start_time = time.time()
+
+        while time.time() - start_time < 60:
             advert_wrapper = self.driver.find_elements(By.CSS_SELECTOR, ".list-row-v2.object-row")
             
             for element in advert_wrapper:
@@ -62,6 +65,7 @@ class PlotEstateCrawler:
                 break
             else:
                 next_page_button.click()
+                time.sleep(2)
 
         return {"Plots": objects, "Search_phrase":f"{self.search_text}"}
 
