@@ -2,11 +2,11 @@ from io import StringIO
 from typing import Any, Callable, Literal
 from pandas import DataFrame
 
-from .crawler_objects import PlotEstateCrawler, AparatmentEstateCrawler, HouseEstateCrawler
+from .crawler_objects import ApartmentEstateCrawler, PlotEstateCrawler, HouseEstateCrawler
 
 CRAWLERS: dict[str, Callable[...,DataFrame]] = {
     "plot": PlotEstateCrawler,
-    "apartment": AparatmentEstateCrawler,
+    "apartment": ApartmentEstateCrawler,
     "house": HouseEstateCrawler
 }
 def crawl_real_estate(object: Literal["plot", "apartment", "house"],
