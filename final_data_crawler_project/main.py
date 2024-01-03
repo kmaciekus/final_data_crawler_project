@@ -26,7 +26,3 @@ def crawl_real_estate(object: Literal["plot", "apartment", "house"],
         return data.to_dict(orient="records")
     else:
         return data
-
-if __name__ == "__main__":
-    data_found = crawl_real_estate(object="plot",time_limit=15)
-    print(data_found)
