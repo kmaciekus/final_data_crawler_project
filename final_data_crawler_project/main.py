@@ -1,12 +1,32 @@
-from .crawler_objects import PlotEstateCrawler, AparatmentEstateCrawler, HouseEstateCrawler
+from io import StringIO
 from typing import Any, Callable, Literal
+from pandas import DataFrame
 
-def crawl_real_estate( search_text, time_limit):
-    crawler = PlotEstateCrawler(search_text, time_limit)
-    crawled_data=crawler.get_search_results()
-    crawler.close_driver()
-    return crawled_data
+from .crawler_objects import ApartmentEstateCrawler, PlotEstateCrawler, HouseEstateCrawler
+
+CRAWLERS: dict[str, Callable[...,DataFrame]] = {
+    "plot": PlotEstateCrawler,
+    "apartment": ApartmentEstateCrawler,
+    "house": HouseEstateCrawler
+}
+def crawl_real_estate(object: Literal["plot", "apartment", "house"],
+                      time_limit: int,
+                      query: str ="",
+                      return_format: Literal["csv", "df", "records"] = "df"):
+    if object not in CRAWLERS:
+        raise ValueError(f"Object '{object}' is not available in the crawler")
+    data= CRAWLERS[object](query, time_limit)
+
+    if return_format == "csv":
+        with StringIO as output:
+            data.to_csv(output)
+            content = output.getvalue()
+        return content
+    elif return_format == "records":
+        return data.to_dict(orient="records")
+    else:
+        return data
 
 if __name__ == "__main__":
-    data_found = crawl_real_estate(search_text="kaune", time_limit=15)
+    data_found = crawl_real_estate(object="plot",time_limit=15)
     print(data_found)
