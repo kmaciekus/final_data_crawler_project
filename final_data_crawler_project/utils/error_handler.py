@@ -1,4 +1,5 @@
 def text_value_error_handler(text: str) -> ValueError | str:
+    if text == None: return ""
     if type(text) is not str:
         raise ValueError("Search text must be string")
     elif text.isdigit():

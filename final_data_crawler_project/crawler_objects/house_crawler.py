@@ -34,7 +34,7 @@ class HouseEstateCrawler:
     BASE_URL = "https://www.aruodas.lt/"
     HOUSE_URL = "namai/"
     SEARCH_URL = "?search_text="
-    def __init__(self, search_text: str, time_limit: int) -> None:
+    def __init__(self, search_text: str | None = "", time_limit: int | None = None) -> None:
         """
         Initializes the HouseEstateCrawler object.
 
@@ -70,7 +70,10 @@ class HouseEstateCrawler:
         objects = []
         start_time = time.time()
 
-        while time.time() - start_time < self.time_limit:
+        while True:
+            if self.time_limit is not None and time.time() - start_time > self.time_limit:
+                print("Time limit exceeded!")
+                break
             advert_wrapper = self.driver.find_elements(By.CSS_SELECTOR, ".list-row-v2.object-row")
 
             if not advert_wrapper:
