@@ -32,7 +32,7 @@ class PlotEstateCrawler:
     BASE_URL = "https://www.aruodas.lt/"
     PLOT_URL = "sklypai/"
     SEARCH_URL = "?search_text="
-    def __init__(self, search_text: str, time_limit: int) -> None:
+    def __init__(self, search_text: str | None = "", time_limit: int | None = None) -> None:
         """
         Initializes the PlotEstateCrawler object.
 
@@ -64,11 +64,15 @@ class PlotEstateCrawler:
         self.driver.get(url)
         cookie_element = self.driver.find_element(by="id", value="onetrust-reject-all-handler")
         cookie_element.click()
-
+        print("kazkas")
         objects = []
         start_time = time.time()
 
-        while time.time() - start_time < self.time_limit:
+        while True:
+        
+            if self.time_limit is not None and time.time() - start_time > self.time_limit:
+                print("Time limit exceeded!")
+                break
             advert_wrapper = self.driver.find_elements(By.CSS_SELECTOR, ".list-row-v2.object-row")
 
             if not advert_wrapper:

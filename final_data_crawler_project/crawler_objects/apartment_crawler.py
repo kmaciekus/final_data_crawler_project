@@ -34,7 +34,7 @@ class ApartmentEstateCrawler:
     BASE_URL = "https://www.aruodas.lt/"
     APARTMENTS_URL = "butai/"
     SEARCH_URL = "?search_text="
-    def __init__(self, search_text: str, time_limit: int) -> None:
+    def __init__(self, search_text: str | None = "", time_limit: int | None = None) -> None:
         """
         Initializes the ApartmentEstateCrawler object.
 
@@ -45,7 +45,10 @@ class ApartmentEstateCrawler:
         checked_text=text_value_error_handler(search_text)
         self.search_text = checked_text
         self.mod_search_text = self.search_text.replace(" ", "%20")
-        self.time_limit = int(time_limit)
+        if time_limit == None:
+            self.time_limit = time_limit
+        else:
+            self.time_limit = int(time_limit)
         self.driver = webdriver.Chrome()
         self.driver.implicitly_wait(5)
 
@@ -70,12 +73,15 @@ class ApartmentEstateCrawler:
         objects = []
         start_time = time.time()
 
-        while time.time() - start_time < self.time_limit:
+        while True:
+        
+            if self.time_limit is not None and time.time() - start_time > self.time_limit:
+                print("Time limit exceeded!")
+                break
             advert_wrapper = self.driver.find_elements(By.CSS_SELECTOR, ".list-row-v2.object-row")
-
+            
             if not advert_wrapper:
                 return DataFrame()
-            
             for element in advert_wrapper:
                 address_loc = element.find_element(By.CLASS_NAME, "list-adress-v2 ")
                 object_link = address_loc.find_element(By.CSS_SELECTOR, "h3 a")
