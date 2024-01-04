@@ -10,13 +10,14 @@ CRAWLERS: dict[str, Callable[...,DataFrame]] = {
     "house": HouseEstateCrawler
 }
 def crawl_real_estate(object: Literal["plot", "apartment", "house"],
-                      time_limit: int,
+                      time_limit: int | None = None,
                       query: str ="",
                       return_format: Literal["csv", "df", "records"] = "df"):
     if object not in CRAWLERS:
         raise ValueError(f"Object '{object}' is not available in the crawler")
-    data= CRAWLERS[object](query, time_limit)
-
+    scraper = CRAWLERS[object](query, time_limit)
+    data = scraper.get_search_results()
+    scraper.close_driver()
     if return_format == "csv":
         with StringIO as output:
             data.to_csv(output)
@@ -26,3 +27,4 @@ def crawl_real_estate(object: Literal["plot", "apartment", "house"],
         return data.to_dict(orient="records")
     else:
         return data
+    
