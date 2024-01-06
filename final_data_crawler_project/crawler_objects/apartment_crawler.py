@@ -51,6 +51,34 @@ class ApartmentEstateCrawler:
             self.time_limit = int(time_limit)
         self.driver = webdriver.Chrome()
         self.driver.implicitly_wait(5)
+    
+    def _handle_cookies(self):
+        try:
+            cookie_element = self.driver.find_element(by="id", value="onetrust-reject-all-handler")
+            cookie_element.click()
+        except NoSuchElementException:
+            pass
+
+    def _check_time_limit(self, start_time):
+        return self.time_limit is not None and time.time() - start_time > self.time_limit
+    
+    def _extract_apartment_data(self, element):
+        address_loc = element.find_element(By.CLASS_NAME, "list-adress-v2 ")
+        object_link = address_loc.find_element(By.CSS_SELECTOR, "h3 a")
+        object_address = object_link.text.replace("\n", " ")
+        object_url = object_link.get_attribute("href")
+        object_price = convert_to_float(address_loc.find_element(By.CSS_SELECTOR, "div span.list-item-price-v2").text.replace("€", "").replace(" ", ""))
+        object_area = convert_to_float(element.find_element(By.CLASS_NAME, "list-AreaOverall-v2 ").text)
+        object_no_of_rooms=convert_to_int(element.find_element(By.CLASS_NAME, "list-RoomNum-v2 ").text) #unique
+        object_floor_no=element.find_element(By.CLASS_NAME, "list-Floors-v2 ").text #unique
+
+        return ApartmentObject(object_address, object_url, object_price, object_area, object_no_of_rooms, object_floor_no)
+    
+    def _get_next_page_button(self):
+        try:
+            return self.driver.find_element(By.XPATH, "//div[contains(@class, 'pagination')]/a[text()='»']")
+        except NoSuchElementException:
+            return None
 
     def get_search_results(self):
         """
@@ -67,42 +95,29 @@ class ApartmentEstateCrawler:
         """
         url = self.BASE_URL + self.APARTMENTS_URL + self.SEARCH_URL + self.mod_search_text
         self.driver.get(url)
-        cookie_element = self.driver.find_element(by="id", value="onetrust-reject-all-handler")
-        cookie_element.click()
+        self._handle_cookies()
 
         objects = []
         start_time = time.time()
 
         while True:
         
-            if self.time_limit is not None and time.time() - start_time > self.time_limit:
+            if self._check_time_limit(start_time):
                 print("Time limit exceeded!")
                 break
             advert_wrapper = self.driver.find_elements(By.CSS_SELECTOR, ".list-row-v2.object-row")
             
             if not advert_wrapper:
                 return DataFrame()
+            
             for element in advert_wrapper:
-                address_loc = element.find_element(By.CLASS_NAME, "list-adress-v2 ")
-                object_link = address_loc.find_element(By.CSS_SELECTOR, "h3 a")
-                object_address = object_link.text.replace("\n", " ")
-                object_url = object_link.get_attribute("href")
-                object_price = convert_to_float(address_loc.find_element(By.CSS_SELECTOR, "div span.list-item-price-v2").text.replace("€", "").replace(" ", ""))
-                object_area = convert_to_float(element.find_element(By.CLASS_NAME, "list-AreaOverall-v2 ").text)
-                object_no_of_rooms=convert_to_int(element.find_element(By.CLASS_NAME, "list-RoomNum-v2 ").text)
-                object_floor_no=element.find_element(By.CLASS_NAME, "list-Floors-v2 ").text
 
-                obj = ApartmentObject(object_address, object_url, object_price, object_area, object_no_of_rooms, object_floor_no)
+                obj = self._extract_apartment_data(element)
                 objects.append(obj.__dict__)
 
-            try:
-                next_page_button = self.driver.find_element(By.XPATH, "//div[contains(@class, 'pagination')]/a[text()='»']")
-            except NoSuchElementException:
-                # If the "Next" button is not found, break out of the loop
-                break
+            next_page_button = self._get_next_page_button()
 
-            if "disabled" in next_page_button.get_attribute("class"):
-                # If the "Next" button is disabled, break out of the loop
+            if not next_page_button or "disabled" in next_page_button.get_attribute("class"):
                 break
             else:
                 next_page_button.click()
