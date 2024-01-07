@@ -5,5 +5,5 @@ if __name__ == "__main__":
     # Saving data to csv file
     # Encoding for lithuanian characters "Šš", "Čč" etc.
     # ATTENTION, THIS CAN TAKE A WHILE!
-    data_found = crawl_real_estate(object="plot")
+    data_found = crawl_real_estate(object="PLOT")
     data_found.to_csv("plots_aruodas.csv", encoding='utf-16') 
